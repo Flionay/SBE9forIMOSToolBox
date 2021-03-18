@@ -89,7 +89,7 @@ startDialog.highDate.timeSeries =
 startDialog.highDate.profile =
 
 % last selected directory for manual data import
-importManager.manualDir = /Users/ay/Downloads/A2/
+importManager.manualDir = D:\Desktop\A2\
 
 % last selected directory for file export
 exportDialog.defaultDir =

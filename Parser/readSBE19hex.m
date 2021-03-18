@@ -35,7 +35,8 @@ function [data, comment] = readSBE19hex( dataLines, instHeader )
 % along with this program.
 % If not, see <https://www.gnu.org/licenses/gpl-3.0.en.html>.
 %
-
+  dataLines
+  instHeader
   data = struct;
 
   % boolean variables used to handle all of the optional entries

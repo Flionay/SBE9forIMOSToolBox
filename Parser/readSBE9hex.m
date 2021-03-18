@@ -1,4 +1,4 @@
-function [data, comment] = readSBE9hex( dataLines, instHeader )
+function [data, comment] = readSBE9hex( dataLines, instHeader,procHeader )
 %READSBE19HEX Parses the given data lines from a SBE19 .hex data file. 
 %
 % Currently, only raw hex (raw voltages and frequencies) output format is 
@@ -36,7 +36,7 @@ function [data, comment] = readSBE9hex( dataLines, instHeader )
 % If not, see <https://www.gnu.org/licenses/gpl-3.0.en.html>.
 %
 
-  data = struct;
+
 
   % boolean variables used to handle all of the optional entries
   
@@ -45,20 +45,16 @@ function [data, comment] = readSBE9hex( dataLines, instHeader )
   % compensation voltage. If raw eng is supported in the 
   % future, the logic defining the value of pressureVolt 
   % will need to be implemented.
-  pressure     = checkField(instHeader, 'pressureSensor', 'strain gauge');
-  pressureVolt = pressure;
-  volt0        = checkField(instHeader, 'ExtVolt0',       'yes');
-  volt1        = checkField(instHeader, 'ExtVolt1',       'yes');
-  volt2        = checkField(instHeader, 'ExtVolt2',       'yes');
-  volt3        = checkField(instHeader, 'ExtVolt3',       'yes');
-  volt4        = checkField(instHeader, 'ExtVolt4',       'yes');
-  volt5        = checkField(instHeader, 'ExtVolt5',       'yes');
-  sbe38        = checkField(instHeader, 'sbe38',          'yes');
-  gtd          = checkField(instHeader, 'gtd',            'yes');
-  dualgtd      = checkField(instHeader, 'dualgtd',        'yes');
-  optode       = checkField(instHeader, 'optode',         'yes');
-  time         = checkField(instHeader, 'mode',           'moored');
   
+ % cut PressureSensorHeader 
+    pcut = []
+    for i =1:length(procHearder{1})
+        z = strfind(procHearder{1}(i),'PressureSensor');
+        if z{1}>0
+            pcut = [pcut,i];
+        end
+    end
+    if length(pcut) > 0, pcutPressureSensorHeader = procHeader(pcut(1):pcut(2)); end
   % preallocate space for the sample data
   nLines = length(dataLines);
   preallocZeros = zeros(nLines, 1);
@@ -121,10 +117,10 @@ function [newData, comment] = convertData(data, header)
   % and pressure, so we manually do all three
   newData.TEMP = convertTemperature(data.temperature, header);
   comment.TEMP = '';
-  newData.PRES = convertPressure(   data.pressure, data.pressureVolt, header);
-  comment.PRES = '';
+%   newData.PRES = convertPressure(   data.pressure, data.pressureVolt, header);
+%   comment.PRES = '';
   newData.CNDC = convertConductivity(data.conductivity, ...
-    newData.PRES, newData.TEMP, header);
+     newData.TEMP, header);
   comment.CNDC = '';
   
   names = fieldnames(data);
@@ -261,7 +257,7 @@ function conductivity = convertConductivity(...
                       (CPCOR * pressure));
 end
 
-function pressure = convertPressure(pressure, pressureVolt, header)
+function pressure = convertPressure(pressurefreq, pressuretemp, header)
 %CONVERTPRESSURE Converts pressure A/D counts to decibars, via the 
 % convertion equation provided with SBE19 calibration sheets. Here, the
 % constant value 14.7*0.689476 dbar for atmospheric pressure isn't 
@@ -332,3 +328,5 @@ function volts = convertVolts(volts, name, header)
   %volts = offset + slope * volts;
 
 end
+
+
