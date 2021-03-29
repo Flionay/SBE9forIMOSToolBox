@@ -17,7 +17,6 @@ toolbox.ddb.password =
 
 % toolbox execution mode. Values can be 'timeSeries' or 'profile'.
 toolbox.mode = timeSeries
-
 % directory which contains netcdf templates
 % (defaults to ./NetCDF/template/)
 toolbox.templateDir =
@@ -56,7 +55,7 @@ autoQCManager.autoQCDefaultChain.timeSeries = imosImpossibleDateQC imosImpossibl
 autoQCManager.autoQCDefaultChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % last selected set of auto QC routines
-autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosVerticalVelocityQC imosCorrMagVelocitySetQC imosHistoricalManualSetQC
+autoQCManager.autoQCChain.timeSeries = imosCorrMagVelocitySetQC imosHistoricalManualSetQC imosInOutWaterQC imosRegionalRangeQC
 autoQCManager.autoQCChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % prompt for preprocessing (if false,
@@ -68,7 +67,7 @@ preprocessManager.preprocessDefaultChain.timeSeries = depthPP salinityPP oxygenP
 preprocessManager.preprocessDefaultChain.profile = depthPP salinityPP oxygenPP
 
 % last selected set of preprocessing routines
-preprocessManager.preprocessChain.timeSeries = depthPP salinityPP oxygenPP absiDecibelBasicPP adcpNortekVelocityEnu2BeamPP adcpBinMappingPP adcpNortekVelocityBeam2EnuPP magneticDeclinationPP velocityMagDirPP
+preprocessManager.preprocessChain.timeSeries = depthPP salinityPP oxygenPP
 preprocessManager.preprocessChain.profile = depthPP salinityPP oxygenPP
 
 % file status dialog formatting styles
@@ -92,7 +91,7 @@ startDialog.highDate.profile =
 importManager.manualDir = D:\Desktop\A2\
 
 % last selected directory for file export
-exportDialog.defaultDir = D:\Desktop
+exportDialog.defaultDir = D:\Desktop\Qingdao
 
 % prompt user to select parser if an appropriate one
 % cannot be found (if false, the data is not imported)

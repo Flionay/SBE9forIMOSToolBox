@@ -60,12 +60,14 @@ function [data, comment] = readSBE9hex( dataLines, instHeader,procHeader )
     
     % l is an index into the current line
     l    = 1;
+    if length(dataLines{k})>10
     line = dataLines{k};
     
                      data.temperature (k) = convert_freq(line(l:l+5)); l=l+6;
                      data.conductivity(k) = convert_freq(line(l:l+5)); l=l+6;
                      data.pressure    (k) = convert_freq(line(l:l+5)); l=l+6; 
                      data.pst         (k) = hex2dec(line(57:59));
+    end
                      
   end
   
