@@ -92,7 +92,7 @@ startDialog.highDate.profile =
 importManager.manualDir = D:\Desktop\A2\
 
 % last selected directory for file export
-exportDialog.defaultDir =
+exportDialog.defaultDir = D:\Desktop
 
 % prompt user to select parser if an appropriate one
 % cannot be found (if false, the data is not imported)

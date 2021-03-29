@@ -77,7 +77,7 @@ function sample_data = SBE911Parse( filename, mode )
   catch 
       error(['The file ',path_xml,'if not exist'])
   end
-  procHeaderLines = procHearder{1}
+  procHeaderLines = procHearder{1};
   procHeader = parseProcessedHeader(procHeaderLines);
   
   % use the appropriate subfunction to read in the data
@@ -86,7 +86,7 @@ function sample_data = SBE911Parse( filename, mode )
   [~, ~, ext] = fileparts(filename);
   
   if strcmpi(ext, '.hex')
-      [data, comment] = readSBE9hex(dataLines, instHeader, procHeader);
+      [data, comment] = readSBE9hex(dataLines, instHeaderLines, procHearder);
   else
       [data, comment] = readSBEcnvData(dataLines, instHeader, procHeader, mode);
   end
@@ -121,15 +121,14 @@ function sample_data = SBE911Parse( filename, mode )
   
   time = genTimestamps(instHeader, data);
   
-  if isfield(instHeader, 'sampleInterval')
-    sample_data.meta.instrument_sample_interval = instHeader.sampleInterval;
-  else
-    sample_data.meta.instrument_sample_interval = median(diff(time*24*3600));
-  end
+
+  
+  % ---------------------------------------------------
+  % data section
   
   sample_data.dimensions = {};  
   sample_data.variables  = {};
-  
+
   switch mode
       case 'profile'
           if ~isfield(procHeader, 'binSize')
@@ -145,7 +144,7 @@ function sample_data = SBE911Parse( filename, mode )
           isZ = false;
           vars = fieldnames(data);
           nVars = length(vars);
-          for k = 1:nVars
+          for k = 1:nVars   % 判断压强为第二个变量
               if strcmpi('DEPTH', vars{k})
                   iVarDEPTH = k;
                   isZ = true;
@@ -162,12 +161,12 @@ function sample_data = SBE911Parse( filename, mode )
               error('There is no pressure or depth information in this file to use it in profile mode');
           end
           
-          depthComment = '';
+          depthComment = ''; % 将压强作为深度信息， depthData
           if ~isnan(iVarDEPTH)
               iVarZ = iVarDEPTH;
               depthData = data.(vars{iVarDEPTH});
           else
-              iVarZ = iVarPRES_REL;
+              iVarZ = iVarPRES_REL;  % 第几个变量
               depthData = data.(vars{iVarPRES_REL});
               presComment = ['relative '...
                   'pressure measurements (calibration offset '...
@@ -178,20 +177,22 @@ function sample_data = SBE911Parse( filename, mode )
                   presComment ', assuming 1dbar ~= 1m.'];
           end
           
+          % 分开下降和上浮过程
           % let's distinguish descending/ascending parts of the profile
           nData = length(data.(vars{iVarZ}));
           zMax = max(data.(vars{iVarZ}));
           posZMax = find(data.(vars{iVarZ}) == zMax, 1, 'last'); % in case there are many times the max value
-          iD = [true(posZMax, 1); false(nData-posZMax, 1)];
+          iD = [true(posZMax, 1); false(nData-posZMax, 1)];  % 下降过程为1  上浮过程为0
           
-          nD = sum(iD);
-          nA = sum(~iD);
-          MAXZ = max(nD, nA);
+          nD = sum(iD); % 多少个下降
+          
+          nA = sum(~iD);  % 多少个上浮
+          MAXZ = max(nD, nA); 
           
           dNaN = nan(MAXZ-nD, 1);
           aNaN = nan(MAXZ-nA, 1);
           
-          if nA == 0
+          if nA ~= 0 % 如果没有上浮过程 这里改成有上浮
               sample_data.dimensions{1}.name            = 'DEPTH';
               sample_data.dimensions{1}.typeCastFunc    = str2func(netcdf3ToMatlabType(imosParameters(sample_data.dimensions{1}.name, 'type')));
               sample_data.dimensions{1}.data            = sample_data.dimensions{1}.typeCastFunc(depthData);
@@ -200,9 +201,9 @@ function sample_data = SBE911Parse( filename, mode )
               
               sample_data.variables{end+1}.name         = 'PROFILE';
               sample_data.variables{end}.typeCastFunc   = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-              sample_data.variables{end}.data           = sample_data.variables{end}.typeCastFunc(1);
+              sample_data.variables{end}.data           = sample_data.variables{end}.typeCastFunc(depthData);
               sample_data.variables{end}.dimensions     = [];
-          else
+          else % 如果有上浮过程
               sample_data.dimensions{1}.name            = 'MAXZ';
               sample_data.dimensions{1}.typeCastFunc    = str2func(netcdf3ToMatlabType(imosParameters(sample_data.dimensions{1}.name, 'type')));
               sample_data.dimensions{1}.data            = sample_data.dimensions{1}.typeCastFunc(1:1:MAXZ);
@@ -218,25 +219,11 @@ function sample_data = SBE911Parse( filename, mode )
           end
           
           % Add TIME, DIRECTION and POSITION infos
-          descendingTime = time(iD);
-          descendingTime = descendingTime(1);
+          descendingTime = time
+
           
-          if nA == 0
-              ascendingTime = [];
-              dimensions = [];
-          else
-              ascendingTime = time(~iD);
-              ascendingTime = ascendingTime(1);
-              dimensions = 2;
-          end
-          
-          sample_data.variables{end+1}.dimensions = dimensions;
-          sample_data.variables{end}.name         = 'TIME';
-          sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-          sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc([descendingTime, ascendingTime]);
-          sample_data.variables{end}.comment      = 'First value over profile measurement.';
-          
-          sample_data.variables{end+1}.dimensions = dimensions;
+
+          sample_data.variables{end+1}.dimensions = 2;
           sample_data.variables{end}.name         = 'DIRECTION';
           sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
           if nA == 0
@@ -245,34 +232,25 @@ function sample_data = SBE911Parse( filename, mode )
               sample_data.variables{end}.data     = {'D', 'A'};
           end
           
-          sample_data.variables{end+1}.dimensions = dimensions;
+          sample_data.variables{end+1}.dimensions = 1;
           sample_data.variables{end}.name         = 'LATITUDE';
           sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
           if nA == 0
-              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc(NaN);
+              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc(data.Latitude);
           else
-              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc([NaN, NaN]);
+              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc(data.Latitude);
           end
           
-          sample_data.variables{end+1}.dimensions = dimensions;
+          sample_data.variables{end+1}.dimensions = 1;
           sample_data.variables{end}.name         = 'LONGITUDE';
           sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
           if nA == 0
-              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc(NaN);
+              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc(data.Longitud);
           else
-              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc([NaN, NaN]);
+              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc(data.Longitude);
           end
           
-          sample_data.variables{end+1}.dimensions = dimensions;
-          sample_data.variables{end}.name         = 'BOT_DEPTH';
-          sample_data.variables{end}.comment      = 'Bottom depth measured by ship-based acoustic sounder at time of CTD cast.';
-          sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-          if nA == 0
-              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc(NaN);
-          else
-              sample_data.variables{end}.data     = sample_data.variables{end}.typeCastFunc([NaN, NaN]);
-          end
-          
+
           % Manually add variable DEPTH if multiprofile and doesn't exist
           % yet
           if isnan(iVarDEPTH) && (nA ~= 0)
@@ -294,9 +272,11 @@ function sample_data = SBE911Parse( filename, mode )
           for k = 1:nVars
               % we skip TIME and DEPTH
               if strcmpi('TIME', vars{k}), continue; end
+              if strcmpi('LONGITUDE', vars{k}), continue; end
+              if strcmpi('LATITUDE', vars{k}), continue; end
               if strcmpi('DEPTH', vars{k}) && (nA == 0), continue; end
 
-              sample_data.variables{end+1}.dimensions = [1 dimensions];
+              sample_data.variables{end+1}.dimensions = [1];
               
               sample_data.variables{end}.name         = vars{k};
               sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
@@ -313,62 +293,15 @@ function sample_data = SBE911Parse( filename, mode )
                   sample_data.variables{end}.coordinates = 'TIME LATITUDE LONGITUDE DEPTH';
               end
               
-              if strncmp('PRES_REL', vars{k}, 8)
-                  % let's document the constant pressure atmosphere offset previously
-                  % applied by SeaBird software on the absolute presure measurement
-                  sample_data.variables{end}.applied_offset = sample_data.variables{end}.typeCastFunc(-14.7*0.689476);
-              end
+%               if strncmp('PRES_REL', vars{k}, 8)
+%                   % let's document the constant pressure atmosphere offset previously
+%                   % applied by SeaBird software on the absolute presure measurement
+%                   sample_data.variables{end}.applied_offset = sample_data.variables{end}.typeCastFunc(-14.7*0.689476);
+%               end
           end
           
-      case 'timeSeries'
-          % dimensions creation
-          sample_data.dimensions{1}.name            = 'TIME';
-          sample_data.dimensions{1}.typeCastFunc    = str2func(netcdf3ToMatlabType(imosParameters(sample_data.dimensions{1}.name, 'type')));
-          % generate time data from header information
-          sample_data.dimensions{1}.data            = sample_data.dimensions{1}.typeCastFunc(time);
-          
-          sample_data.variables{end+1}.name           = 'TIMESERIES';
-          sample_data.variables{end}.typeCastFunc     = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-          sample_data.variables{end}.data             = sample_data.variables{end}.typeCastFunc(1);
-          sample_data.variables{end}.dimensions       = [];
-          sample_data.variables{end+1}.name           = 'LATITUDE';
-          sample_data.variables{end}.typeCastFunc     = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-          sample_data.variables{end}.data             = sample_data.variables{end}.typeCastFunc(NaN);
-          sample_data.variables{end}.dimensions       = [];
-          sample_data.variables{end+1}.name           = 'LONGITUDE';
-          sample_data.variables{end}.typeCastFunc     = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-          sample_data.variables{end}.data             = sample_data.variables{end}.typeCastFunc(NaN);
-          sample_data.variables{end}.dimensions       = [];
-          sample_data.variables{end+1}.name           = 'NOMINAL_DEPTH';
-          sample_data.variables{end}.typeCastFunc     = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-          sample_data.variables{end}.data             = sample_data.variables{end}.typeCastFunc(NaN);
-          sample_data.variables{end}.dimensions       = [];
-          
-          % scan through the list of parameters that were read
-          % from the file, and create a variable for each
-          vars = fieldnames(data);
-          coordinates = 'TIME LATITUDE LONGITUDE NOMINAL_DEPTH';
-          for k = 1:length(vars)
-              
-              if strncmp('TIME', vars{k}, 4), continue; end
-              
-              % dimensions definition must stay in this order : T, Z, Y, X, others;
-              % to be CF compliant
-              sample_data.variables{end+1}.dimensions   = 1;
-              
-              sample_data.variables{end  }.name         = vars{k};
-              sample_data.variables{end  }.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-              sample_data.variables{end  }.data         = sample_data.variables{end}.typeCastFunc(data.(vars{k}));
-              sample_data.variables{end  }.comment      = comment.(vars{k});
-              sample_data.variables{end  }.coordinates  = coordinates;
-              
-              if strncmp('PRES_REL', vars{k}, 8)
-                  % let's document the constant pressure atmosphere offset previously
-                  % applied by SeaBird software on the absolute presure measurement
-                  sample_data.variables{end}.applied_offset = sample_data.variables{end}.typeCastFunc(-14.7*0.689476);
-              end
-          end
-  
+
+
   end
 end
 
