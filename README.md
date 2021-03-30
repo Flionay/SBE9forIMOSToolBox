@@ -34,3 +34,19 @@ This project is designed and maintained by [ANMN](http://imos.org.au/facilities/
 # License
 
 The toolbox is copyrighted and licensed under the terms of the GNU GPLv3. For more details, click [here](https://raw.githubusercontent.com/aodn/imos-toolbox/master/license.txt).
+
+## 修改思路
+
+用SBE19去读取用软件转完的cnv文件
+
+看哪里需要改，将hex文件读取的data添加字段。
+
+
+
+commit
+
+‘pass first’ A2文件通了，但是缺乏变量区间，所以质量控制没办法弄。这是一个问题
+
+第二个是导出得nc文件没有电导率。
+
+还需要将强哥给的数据，对比一下，看导出之后能不能与他处理的一致。

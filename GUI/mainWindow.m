@@ -257,7 +257,9 @@ panb        = findobj(buttons, 'TooltipString', 'Pan');
 datacursorb = findobj(buttons, 'TooltipString', 'Data Cursor');
 
 buttons(buttons == tb)            = [];
+
 buttons(buttons == savefigb)      = [];
+
 if verLessThan('matlab', '9.5')
     buttons(buttons == zoominb)       = [];
     buttons(buttons == zoomoutb)      = [];

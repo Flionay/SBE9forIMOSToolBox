@@ -263,8 +263,8 @@ for i = 1:length([pcutPressureSensorHeader])
         param_pres = setfield(param_pres,res{1}{1},str2num(res{1}{2}));
     end
 end
-pst = pressuretemp 
-freq = pressurefreq
+pst = pressuretemp; 
+freq = pressurefreq;
 
 
 psi2dbar = 0.689476;

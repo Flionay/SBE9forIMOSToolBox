@@ -141,7 +141,7 @@ coordinates = 'TIME LATITUDE LONGITUDE NOMINAL_DEPTH';
 % dimensions definition must stay in this order : T, Z, Y, X, others;
 % to be CF compliant
 sample_data.variables{end+1}.dimensions     = 1;
-sample_data.variables{end  }.name           = 'Depth';
+sample_data.variables{end  }.name           = 'DEPTH';
 sample_data.variables{end  }.typeCastFunc   = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
 sample_data.variables{end  }.data           = sample_data.variables{end}.typeCastFunc(pressure);
 sample_data.variables{end  }.coordinates    = coordinates;
@@ -156,7 +156,7 @@ sample_data.variables{end  }.data           = sample_data.variables{end}.typeCas
 sample_data.variables{end  }.coordinates    = coordinates;
 
 sample_data.variables{end+1}.dimensions     = 1;
-sample_data.variables{end  }.name           = 'COND';
+sample_data.variables{end  }.name           = 'CNDC';
 sample_data.variables{end  }.typeCastFunc   = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
 sample_data.variables{end  }.data           = sample_data.variables{end}.typeCastFunc(cndc);
 sample_data.variables{end  }.coordinates    = coordinates;
@@ -225,6 +225,36 @@ exprs = {...
     sbe38Expr    optodeExpr   ...
     voltCalExpr  otherExpr ...
     firmExpr     sensorId   sensorType firmExpr2 serialExpr serialExpr2};
+
+
+
+for k = 1:length(headerLines)
+    filt = regexp(headerLines{k},'* System UTC =',"split" );
+    if length(filt)>1
+        
+        date = regexp(cell2str(filt(2)),'\w*',"match");
+    end
+end
+
+month = date{1};
+day = str2num(date{2});
+year = str2num(date{3});
+hour = str2num(date{4});
+minute = str2num(date{5});
+second = str2num(date{6});
+
+
+month_str  = {'January','February','March','April','May','June','July','August','September','October','November','December'};
+month_st ={'Jan','Feb','Mar','Apr','May','Jun','Jul', 'Aug','Sept','Oct','Nov','Dec'};
+
+for i =1:12
+    if strcmp(month, month_str{i}) | strcmp(month,month_st{i})
+        month_num = i;
+        break
+    end
+end
+header.castDate = datenum(year,month_num,day,hour,minute,second);
+
 
 for k = 1:length(headerLines)
     

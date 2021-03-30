@@ -55,7 +55,7 @@ autoQCManager.autoQCDefaultChain.timeSeries = imosImpossibleDateQC imosImpossibl
 autoQCManager.autoQCDefaultChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % last selected set of auto QC routines
-autoQCManager.autoQCChain.timeSeries = imosCorrMagVelocitySetQC imosHistoricalManualSetQC imosInOutWaterQC imosRegionalRangeQC
+autoQCManager.autoQCChain.timeSeries = imosCorrMagVelocitySetQC imosHistoricalManualSetQC imosInOutWaterQC imosRegionalRangeQC CTDSurfaceSoakQC imosDensityInversionSetQC imosEchoIntensityVelocitySetQC imosErrorVelocitySetQC imosGlobalRangeQC imosHorizontalVelocitySetQC imosImpossibleDateQC imosImpossibleDepthQC imosImpossibleLocationSetQC
 autoQCManager.autoQCChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % prompt for preprocessing (if false,
@@ -67,7 +67,7 @@ preprocessManager.preprocessDefaultChain.timeSeries = depthPP salinityPP oxygenP
 preprocessManager.preprocessDefaultChain.profile = depthPP salinityPP oxygenPP
 
 % last selected set of preprocessing routines
-preprocessManager.preprocessChain.timeSeries = depthPP salinityPP oxygenPP
+preprocessManager.preprocessChain.timeSeries = salinityPP oxygenPP
 preprocessManager.preprocessChain.profile = depthPP salinityPP oxygenPP
 
 % file status dialog formatting styles
