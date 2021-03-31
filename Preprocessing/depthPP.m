@@ -144,6 +144,7 @@ for iCurSam = 1:nDatasets
     depthIdx(iCurSam) = getVar(sample_data{iCurSam}.(depthVarType), 'DEPTH');
     if depthIdx(iCurSam)
         useItsOwnDepth(iCurSam) = true;
+        return
     end
     
     presIdx(iCurSam) = getVar(sample_data{iCurSam}.variables, 'PRES');

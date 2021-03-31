@@ -1,4 +1,4 @@
-function sample_data = SBE911_2Parse( filename, mode )
+function sample_data = SBE9Parse( filename, mode )
 %SBE26PARSE Parses a .tid data file from a Seabird SBE26
 % TP logger.
 %
