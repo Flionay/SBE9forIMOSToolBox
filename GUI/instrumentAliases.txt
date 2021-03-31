@@ -1,5 +1,0 @@
-%
-% Aliases for instrument names
-%
-% Instrument Exact Name, Alias/Abbreviation
-Seabird SBE19plus, SBE19+

@@ -1,2 +1,0 @@
-python snapshot.py
-pause

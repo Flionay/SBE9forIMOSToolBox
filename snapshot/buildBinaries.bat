@@ -1,2 +1,0 @@
-python buildBinaries.py
-pause

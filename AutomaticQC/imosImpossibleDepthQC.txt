@@ -1,2 +1,0 @@
-zNominalMargin = 15
-maxAngle = 70

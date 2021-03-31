@@ -1,2 +1,0 @@
-python official.py
-pause
